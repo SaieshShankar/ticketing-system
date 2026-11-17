@@ -8,7 +8,6 @@ import { DEPARTMENTS } from "../constants/departments";
 
 const router = Router();
 
-const ALLOWED_ROLES = ["Admin", "Editor", "User"];
 const DEFAULT_ROLE = "User";
 const REFRESH_TOKEN_HOURS = Number(process.env.REFRESH_TOKEN_EXPIRES_HOURS || 2);
 
@@ -75,7 +74,7 @@ router.post("/signup", async (req, res) => {
     if (!req.body || typeof req.body !== "object") {
       return res.status(400).json({ status: "400", message: "Request body is missing or not valid JSON. Check that Content-Type: application/json is set in Postman." });
     }
-    const { name, email, password, role, department } = req.body;
+    const { name, email, password, department } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ status: "400", message: "name, email and password are required" });
     }
@@ -88,7 +87,6 @@ router.post("/signup", async (req, res) => {
     if (department && !DEPARTMENTS.includes(department)) {
       return res.status(400).json({ status: "400", message: `department must be one of: ${DEPARTMENTS.join(", ")}` });
     }
-    const finalRole = role && ALLOWED_ROLES.includes(role) ? role : DEFAULT_ROLE;
     const normalizedEmail = String(email).toLowerCase().trim();
 
     const existing = await prisma.users.findUnique({ where: { email: normalizedEmail } });
@@ -98,7 +96,7 @@ router.post("/signup", async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, 10);
     const user = await prisma.users.create({
-      data: { name, email: normalizedEmail, password_hash, role: finalRole, department: department ?? null },
+      data: { name, email: normalizedEmail, password_hash, role: DEFAULT_ROLE, department: department ?? null },
     });
 
     const accessToken = signAccessToken(user);

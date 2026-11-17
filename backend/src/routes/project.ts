@@ -288,6 +288,11 @@ router.post(
             return;
           }
 
+          if (member.role && !["User", "Editor"].includes(member.role)) {
+            res.status(400).json({ status: "400", message: "New member role must be User or Editor" });
+            return;
+          }
+
           const password_hash = await bcrypt.hash(member.password, 10);
 
           user = await prisma.users.create({
