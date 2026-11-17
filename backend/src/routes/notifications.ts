@@ -17,7 +17,7 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
         ...(unreadOnly && { is_read: false }),
       },
       include: {
-        actor: { select: { id: true, name: true, email: true } },
+        users_notifications_actor_idTousers: { select: { id: true, name: true, email: true } },
         tickets: { select: { id: true, title: true, ticket_number: true } },
       },
       orderBy: [{ is_read: "asc" }, { created_at: "desc" }],
@@ -27,7 +27,15 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
       where: { user_id: userId, is_read: false },
     });
 
-    res.json({ status: "200", total: notifications.length, unread_count, notifications });
+    res.json({
+      status: "200",
+      total: notifications.length,
+      unread_count,
+      notifications: notifications.map(({ users_notifications_actor_idTousers, ...notification }) => ({
+        ...notification,
+        actor: users_notifications_actor_idTousers,
+      })),
+    });
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ status: "500", message: "Failed to fetch notifications", detail: error.message });

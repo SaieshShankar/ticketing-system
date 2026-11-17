@@ -394,35 +394,10 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
     setMemberSuccess("");
 
     try {
-      let memberUserId: string | undefined;
-
-      if (memberMode === "new") {
-        // Create the new member's account first so we have a user_id to attach.
-        const signupRes = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: memberName.trim(),
-            email: memberEmail.trim(),
-            password: memberPassword,
-            role: memberRole,
-          }),
-        });
-        const signupData = await signupRes.json().catch(() => ({}));
-
-        if (!signupRes.ok || !signupData?.user?.id) {
-          setMemberError(
-            signupData?.message || signupData?.error || "Could not create the new member's account."
-          );
-          return;
-        }
-        memberUserId = signupData.user.id;
-      }
-
       const res = await apiClient.post(`/project/${id}/members`, {
         members:
           memberMode === "new"
-            ? [{ user_id: memberUserId }]
+            ? [{ name: memberName.trim(), email: memberEmail.trim(), password: memberPassword, role: memberRole }]
             : [{ email: existingEmail.trim() }],
       });
 
@@ -722,7 +697,7 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
                       className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-300"
                     >
                       <option value="User">User</option>
-                      <option value="Admin">Admin</option>
+                      <option value="Editor">Editor</option>
                     </select>
                   </div>
                 </>
